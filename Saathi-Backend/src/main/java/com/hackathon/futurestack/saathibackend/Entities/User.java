@@ -20,18 +20,15 @@ import java.util.List;
 @AllArgsConstructor
 public class User extends BaseModel {
 
+    @Column(nullable = false, unique = true)
+    private String firebaseUid;
+
     @Column(nullable = false)
     private String name;
 
     @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false, unique = true)
     @Email
     private String email;
-
-    @Column(nullable = false)
-    private String password;
 
     @Column(nullable = false)
     private String roles;
