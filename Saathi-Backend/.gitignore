@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore Firebase admin secret key
+src/main/resources/serviceAccountKey.json
