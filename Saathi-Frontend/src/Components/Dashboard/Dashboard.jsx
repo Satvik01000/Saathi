@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Box, ToggleButtonGroup, ToggleButton, Tooltip, IconButton } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import TextFieldsIcon from '@mui/icons-material/TextFields';
-import MicIcon from '@mui/icons-material/Mic';
-import ScreenShareIcon from '@mui/icons-material/ScreenShare';
+import { Menu as MenuIcon, TextFields, Mic, ScreenShare } from '@mui/icons-material';
 import { useAuth } from '../../Context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { auth } from '../../firebase-config';
 import TextChat from './TextChat';
 import VoiceChat from './VoiceChat';
-import ScreenShare from './ScreenShare';
+import ScreenShareComp from './ScreenShare';
 import ChatHistory from './ChatHistory';
 import BaseURL from "../../../Util/baseBackendURL.js";
 
@@ -24,46 +21,28 @@ const Dashboard = () => {
     const [activeChat, setActiveChat] = useState(null);
 
     useEffect(() => {
-        if (auth.currentUser) {
-            const fetchHistory = async () => {
-                try {
-                    const token = await auth.currentUser.getIdToken();
-                    const response = await axios.get(`${BaseURL}/chats/all`, { // Assuming /all is your endpoint for summaries
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    setChatHistory(response.data || []);
-                } catch (error) {
-                    console.error("Failed to fetch chat history:", error);
-                    setChatHistory([]);
-                }
-            };
-            fetchHistory();
-        }
+        if (!auth.currentUser) return;
+        (async () => {
+            try {
+                const token = await auth.currentUser.getIdToken();
+                const { data } = await axios.get(`${BaseURL}/chats/all`, { headers: { Authorization: `Bearer ${token}` } });
+                setChatHistory(data || []);
+            } catch (err) {
+                console.error("Failed to fetch chat history:", err);
+            }
+        })();
     }, [auth.currentUser]);
 
-    const handleModeChange = (event, newMode) => {
-        if (newMode !== null) setMode(newMode);
-    };
-
-    // ✅ FIX: Replaced placeholder with the real API call
-    const handleSelectChat = async (chatId) => {
+    const handleSelectChat = async (id) => {
         try {
             const token = await auth.currentUser.getIdToken();
-            const response = await axios.get(`${BaseURL}/chats/${chatId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setActiveChat(response.data);
+            const { data } = await axios.get(`${BaseURL}/chats/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            setActiveChat(data);
             setMode('text');
             setIsHistoryOpen(false);
-        } catch (error) {
-            console.error("Failed to fetch selected chat:", error);
+        } catch (e) {
+            console.error("Failed to fetch chat:", e);
         }
-    };
-
-    const handleNewChat = () => {
-        setActiveChat(null);
-        setHasMessages(false);
-        setIsHistoryOpen(false);
     };
 
     const handleLogout = async () => {
@@ -74,23 +53,9 @@ const Dashboard = () => {
     };
 
     return (
-        <Box
-            sx={{
-                height: '100vh',
-                width: '100vw',
-                backgroundColor: '#0f0f0f',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: hasMessages ? 'flex-end' : 'center',
-                p: 3,
-                boxSizing: 'border-box',
-                transition: 'justify-content 0.5s ease',
-                position: 'relative',
-            }}
-        >
+        <Box sx={mainBoxStyles(hasMessages)}>
             <Tooltip title="Chat History">
-                <IconButton onClick={() => setIsHistoryOpen(true)} sx={{ position: 'absolute', top: 24, left: 24, color: 'white', backgroundColor: 'rgba(255,255,255,0.1)', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' }, zIndex: 10 }}>
+                <IconButton onClick={() => setIsHistoryOpen(true)} sx={menuButtonStyle}>
                     <MenuIcon />
                 </IconButton>
             </Tooltip>
@@ -101,42 +66,48 @@ const Dashboard = () => {
                 history={chatHistory}
                 onSelectChat={handleSelectChat}
                 onLogout={handleLogout}
-                onNewChat={handleNewChat}
+                onNewChat={() => { setActiveChat(null); setHasMessages(false); setIsHistoryOpen(false); }}
             />
 
-            <Box sx={{ width: '100%', maxWidth: '800px', flexGrow: hasMessages ? 1 : 0, display: 'flex', flexDirection: 'column', transition: 'flex-grow 0.4s ease', overflow: 'hidden', minHeight: 0 }}>
-                {mode === 'text' && (
-                    <TextChat
-                        key={activeChat ? activeChat.id : 'new-chat'}
-                        onMessagesChange={setHasMessages}
-                        initialChat={activeChat}
-                    />
-                )}
+            <Box sx={chatBoxStyle(hasMessages)}>
+                {mode === 'text' && <TextChat key={activeChat?.id || 'new-chat'} onMessagesChange={setHasMessages} initialChat={activeChat} />}
                 {mode === 'voice' && <VoiceChat />}
-                {mode === 'screenshare' && <ScreenShare />}
+                {mode === 'screenshare' && <ScreenShareComp />}
             </Box>
 
-            <ToggleButtonGroup value={mode} exclusive onChange={handleModeChange} sx={{ width: '100%', maxWidth: '800px', background: '#1e1e1e', borderRadius: '20px', p: 1, boxShadow: '0px 4px 20px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', mt: 2, mb: hasMessages ? 2 : 0, transition: 'all 0.4s ease' }}>
-                <Tooltip title="Text Input"><ToggleButton value="text" sx={toggleButtonStyles('#1976d2')}><TextFieldsIcon /> Text</ToggleButton></Tooltip>
-                <Tooltip title="Voice Input"><ToggleButton value="voice" sx={toggleButtonStyles('#43a047')}><MicIcon /> Voice</ToggleButton></Tooltip>
-                <Tooltip title="Screen Share"><ToggleButton value="screenshare" sx={toggleButtonStyles('#ff9800')}><ScreenShareIcon /> Screen Share</ToggleButton></Tooltip>
+            <ToggleButtonGroup value={mode} exclusive onChange={(e, val) => val && setMode(val)} sx={toggleGroupStyles(hasMessages)}>
+                <Tooltip title="Text Input"><ToggleButton value="text" sx={toggleButton('#1976d2')}><TextFields /> Text</ToggleButton></Tooltip>
+                <Tooltip title="Voice Input"><ToggleButton value="voice" sx={toggleButton('#43a047')}><Mic /> Voice</ToggleButton></Tooltip>
+                <Tooltip title="Screen Share"><ToggleButton value="screenshare" sx={toggleButton('#ff9800')}><ScreenShare /> Screen</ToggleButton></Tooltip>
             </ToggleButtonGroup>
         </Box>
     );
 };
 
-const toggleButtonStyles = (activeColor) => ({
-    flex: 1,
-    mx: 0.5,
-    borderRadius: '16px !important',
-    color: 'rgba(255,255,255,0.7)',
-    textTransform: 'none',
-    fontWeight: 600,
-    fontSize: '1rem',
-    gap: 1,
-    transition: 'all 0.3s ease',
+const mainBoxStyles = (hasMessages) => ({
+    height: '100vh', width: '100vw', background: '#0f0f0f',
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    justifyContent: hasMessages ? 'flex-end' : 'center', p: 3, position: 'relative',
+    transition: 'justify-content 0.5s ease'
+});
+const menuButtonStyle = {
+    position: 'absolute', top: 24, left: 24, color: 'white',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' }
+};
+const chatBoxStyle = (hasMessages) => ({
+    width: '100%', maxWidth: 800, flexGrow: hasMessages ? 1 : 0,
+    display: 'flex', flexDirection: 'column', transition: 'flex-grow 0.4s ease'
+});
+const toggleGroupStyles = (hasMessages) => ({
+    width: '100%', maxWidth: 800, background: '#1e1e1e', borderRadius: 20, p: 1,
+    mt: 2, mb: hasMessages ? 2 : 0, border: '1px solid rgba(255,255,255,0.08)',
+});
+const toggleButton = (activeColor) => ({
+    flex: 1, mx: 0.5, borderRadius: '16px !important', color: 'rgba(255,255,255,0.7)',
+    textTransform: 'none', fontWeight: 600, fontSize: '1rem',
     '&.Mui-selected': { background: activeColor, color: '#fff', boxShadow: `0px 4px 15px ${activeColor}90`, transform: 'translateY(-3px)' },
-    '&:hover': { background: 'rgba(255,255,255,0.1)', color: '#fff' },
+    '&:hover': { background: 'rgba(255,255,255,0.1)', color: '#fff' }
 });
 
 export default Dashboard;
