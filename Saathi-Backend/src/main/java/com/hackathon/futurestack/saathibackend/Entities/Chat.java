@@ -10,12 +10,12 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "guide")
+@Table(name = "chat")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Guide extends BaseModel {
+public class Chat extends BaseModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

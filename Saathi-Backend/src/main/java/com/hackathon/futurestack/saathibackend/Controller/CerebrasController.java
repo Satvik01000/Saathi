@@ -1,6 +1,7 @@
 package com.hackathon.futurestack.saathibackend.Controller;
 
 import com.hackathon.futurestack.saathibackend.DTO.Request.TextRequestDTO;
+import com.hackathon.futurestack.saathibackend.DTO.Response.TextResponseDTO;
 import com.hackathon.futurestack.saathibackend.Service.CerebrasTextToText.CerebrasTextToTextService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,7 +18,7 @@ public class CerebrasController {
     }
 
     @PostMapping("/text/complete")
-    public String giveResponseText(@RequestBody TextRequestDTO textRequestDTO){
+    public TextResponseDTO giveResponseText(@RequestBody TextRequestDTO textRequestDTO){
         return textToTextService.textToTextResponse(textRequestDTO.getQuery());
     }
 }
