@@ -48,7 +48,7 @@ const TextChat = ({ onMessagesChange, initialChat }) => {
                     modelResponse = response.data.modelResponse;
                     setChatId(response.data.chatId);
                 } else {
-                    const response = await axios.post(`${BaseURL}/chats/${chatId}/messages`, { query: currentInput }, config);
+                    const response = await axios.post(`${BaseURL}/chats/${chatId}`, { query: currentInput }, config);
                     modelResponse = response.data.modelResponse;
                 }
 
