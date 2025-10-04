@@ -7,7 +7,7 @@ import axios from 'axios';
 import { auth } from '../firebase-config.js';
 import BaseURL from '../../Util/baseBackendURL.js';
 import SaathiLogo from '/SaathiLogo.svg';
-import { useAuth } from '../Context/AuthContext';  // ✅ Import the auth context
+import { useAuth } from '../Context/AuthContext';
 
 const textFieldSx = {
   '& .MuiOutlinedInput-root': {
@@ -23,13 +23,10 @@ const LoginPage = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // ✅ Get auth state
+  const { currentUser } = useAuth();
 
-  // ✅ Redirect if already logged in
   useEffect(() => {
-    if (currentUser) {
-      navigate('/');  // redirect to landing page
-    }
+    if (currentUser) navigate('/');
   }, [currentUser, navigate]);
 
   const updateField = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -64,6 +61,7 @@ const LoginPage = () => {
   const handleGoogle = async () => {
     try {
       const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
+      user.getIdToken().then(token => console.log('COPY THIS TOKEN:', token));
       await syncUser(user);
     } catch {
       setError('Failed to sign in with Google.');
@@ -74,12 +72,9 @@ const LoginPage = () => {
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', bgcolor: '#1a1a1a', py: 4 }}>
       <Container maxWidth="md">
         <Paper elevation={6} sx={{ p: 4, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', bgcolor: '#1e1e1e', color: 'white', borderRadius: 2, gap: 4 }}>
-          {/* Logo */}
           <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', p: { xs: 0, md: 4 } }}>
             <Box component="img" src={SaathiLogo} alt="Saathi Logo" sx={{ width: '100%', maxWidth: 250, objectFit: 'contain' }} />
           </Box>
-
-          {/* Form */}
           <Box sx={{ flex: 1, width: '100%' }}>
             <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold', textAlign: 'center' }}>
               {isSignUp ? 'Create an Account' : 'Welcome to Saathi'}
@@ -87,29 +82,18 @@ const LoginPage = () => {
             <Typography variant="body2" sx={{ mb: 4, color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
               {isSignUp ? 'Get started with your details.' : 'Sign in or create an account.'}
             </Typography>
-
-            <Button fullWidth variant="outlined" startIcon={<GoogleIcon />} onClick={handleGoogle}
-              sx={{ py: 1.5, color: 'white', borderColor: 'rgba(71,179,242,0.5)', borderRadius: 1, textTransform: 'none', fontSize: '1rem',
-                '&:hover': { bgcolor: 'rgba(24,149,244,0.1)', borderColor: 'white' } }}>
+            <Button fullWidth variant="outlined" startIcon={<GoogleIcon />} onClick={handleGoogle} sx={{ py: 1.5, color: 'white', borderColor: 'rgba(71,179,242,0.5)', borderRadius: 1, textTransform: 'none', fontSize: '1rem', '&:hover': { bgcolor: 'rgba(24,149,244,0.1)', borderColor: 'white' } }}>
               Continue with Google
             </Button>
-
             <Divider sx={{ my: 3, color: 'grey' }}>OR</Divider>
-
             <Box component="form" onSubmit={handleSubmit}>
-              {isSignUp && (
-                <TextField fullWidth required name="name" label="Full Name" value={form.name} onChange={updateField} sx={textFieldSx} margin="normal" />
-              )}
+              {isSignUp && <TextField fullWidth required name="name" label="Full Name" value={form.name} onChange={updateField} sx={textFieldSx} margin="normal" />}
               <TextField fullWidth required name="email" label="Email Address" value={form.email} onChange={updateField} sx={textFieldSx} margin="normal" />
-              <TextField fullWidth required type="password" name="password" label="Password" value={form.password} onChange={updateField} sx={textFieldSx} margin="normal"
-                autoComplete={isSignUp ? "new-password" : "current-password"} />
-
+              <TextField fullWidth required type="password" name="password" label="Password" value={form.password} onChange={updateField} sx={textFieldSx} margin="normal" autoComplete={isSignUp ? "new-password" : "current-password"} />
               <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2, py: 1.5, fontWeight: 'bold', borderRadius: 1 }}>
                 {isSignUp ? 'Sign Up' : 'Sign In'}
               </Button>
-
               {error && <Typography color="error" align="center" sx={{ my: 2 }}>{error}</Typography>}
-
               <Grid container justifyContent="space-between">
                 {!isSignUp && <Link href="#" variant="body2" sx={{ color: '#bb86fc' }}>Forgot password?</Link>}
                 <Link variant="body2" onClick={() => { setIsSignUp(!isSignUp); setError(''); }} sx={{ color: '#bb86fc', cursor: 'pointer' }}>
