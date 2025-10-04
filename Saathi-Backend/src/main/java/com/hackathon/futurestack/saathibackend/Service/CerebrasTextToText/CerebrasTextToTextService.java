@@ -1,8 +1,9 @@
 package com.hackathon.futurestack.saathibackend.Service.CerebrasTextToText;
 
+import com.hackathon.futurestack.saathibackend.DTO.Response.TextResponseDTO;
 import org.springframework.stereotype.Component;
 
 @Component
 public interface CerebrasTextToTextService {
-    String textToTextResponse(String query);
+    TextResponseDTO textToTextResponse(String query);
 }

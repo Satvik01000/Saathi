@@ -1,5 +1,7 @@
 package com.hackathon.futurestack.saathibackend.Service.CerebrasTextToText;
 
+import com.hackathon.futurestack.saathibackend.DTO.ExternalResponse.CerebrasApiResponse;
+import com.hackathon.futurestack.saathibackend.DTO.Response.TextResponseDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,7 @@ public class CerebrasTextToTextServiceImpl implements CerebrasTextToTextService{
     }
 
     @Override
-    public String textToTextResponse(String query) {
+    public TextResponseDTO textToTextResponse(String query) {
         Map<String, Object> requestBody = Map.of(
                 "model", "llama-4-scout-17b-16e-instruct",
                 "stream", false,
@@ -31,13 +33,20 @@ public class CerebrasTextToTextServiceImpl implements CerebrasTextToTextService{
                 "top_p", 1
         );
 
-        return webClient.post()
+        CerebrasApiResponse response = webClient.post()
                 .uri(apiUrl)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(String.class)
+                .bodyToMono(CerebrasApiResponse.class)
                 .block();
+
+        assert response != null;
+        return TextResponseDTO.builder()
+                .content(response.getChoices().getFirst().getMessage().getContent())
+                .model(response.getModel())
+                .build();
     }
+
 }
