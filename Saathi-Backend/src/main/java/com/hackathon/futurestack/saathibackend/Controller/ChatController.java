@@ -3,11 +3,14 @@ package com.hackathon.futurestack.saathibackend.Controller;
 import com.hackathon.futurestack.saathibackend.DTO.Request.ChatMessageRequestDTO;
 import com.hackathon.futurestack.saathibackend.DTO.Response.NewChatResponseDTO;
 import com.hackathon.futurestack.saathibackend.DTO.Response.ChatMessageResponseDTO;
+import com.hackathon.futurestack.saathibackend.Entities.Chat;
 import com.hackathon.futurestack.saathibackend.Service.Chat.ChatService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -30,5 +33,10 @@ public class ChatController {
     public ResponseEntity<ChatMessageResponseDTO> addMessageToChat(@PathVariable UUID chatId, @Valid @RequestBody ChatMessageRequestDTO request) {
         ChatMessageResponseDTO response = chatService.addMessageToChat(chatId, request.getQuery());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<Optional<List<Chat>>> allChats(){
+        return ResponseEntity.ok(chatService.returnAllChat());
     }
 }

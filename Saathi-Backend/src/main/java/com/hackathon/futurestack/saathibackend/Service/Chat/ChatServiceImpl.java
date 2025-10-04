@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -80,6 +81,12 @@ public class ChatServiceImpl implements ChatService {
         chatRepo.save(chat);
 
         return new ChatMessageResponseDTO(aiResponse.getContent(), aiResponse.getModel());
+    }
+
+    @Override
+    public Optional<List<Chat>> returnAllChat() {
+        User currentUser = findAuthenticatedUser();
+        return chatRepo.findByUser(currentUser);
     }
 
     private User findAuthenticatedUser() {
