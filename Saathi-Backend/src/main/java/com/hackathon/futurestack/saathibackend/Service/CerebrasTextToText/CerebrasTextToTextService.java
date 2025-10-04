@@ -2,8 +2,9 @@ package com.hackathon.futurestack.saathibackend.Service.CerebrasTextToText;
 
 import com.hackathon.futurestack.saathibackend.DTO.Response.TextResponseDTO;
 import org.springframework.stereotype.Component;
+import java.util.List;
+import java.util.Map;
 
-@Component
 public interface CerebrasTextToTextService {
-    TextResponseDTO textToTextResponse(String query);
+    TextResponseDTO textToTextResponse(List<Map<String, String>> messages);
 }
