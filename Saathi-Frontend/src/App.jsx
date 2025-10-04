@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './Components/LandingPage';
 import LoginPage from './Components/LoginPage';
 import Dashboard from './Components/Dashboard/Dashboard';
+import 'highlight.js/styles/github-dark.css';
 
 const App = () => {
   return (
