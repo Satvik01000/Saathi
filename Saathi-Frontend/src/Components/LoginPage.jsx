@@ -1,5 +1,3 @@
-// src/Components/LandingPage.jsx
-
 import Spline from '@splinetool/react-spline';
 import { Box, Button, Typography } from '@mui/material';
 import Header from './Header';
@@ -59,6 +57,7 @@ const LandingPage = () => {
                     textAlign: 'center',
                 }}
             >
+                {/* Stronger headline */}
                 <Typography
                     variant="h1"
                     component="h1"
@@ -93,23 +92,18 @@ const LandingPage = () => {
                 <Button
                     size="large"
                     sx={{
-                        // --- NEW GLASSMORHPISM LIQUID GLASS STYLES (Bluish tint) ---
                         borderRadius: '30px',
                         px: 5,
                         py: 1.5,
                         fontWeight: 'bold',
                         fontSize: '1.2rem',
                         color: 'white',
-                        background: 'rgba(33, 150, 243, 0.2)',
-                        backdropFilter: 'blur(10px) saturate(180%)',
-                        WebkitBackdropFilter: 'blur(10px) saturate(180%)',
-                        border: '1px solid rgba(100, 200, 255, 0.3)',
-                        boxShadow: '0 8px 30px rgba(33, 150, 243, 0.3)',
-                        transition: 'background 0.3s ease-in-out, border 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+                        background: 'linear-gradient(135deg, #2196F3 0%, #00BCD4 100%)',
+                        boxShadow: '0 8px 30px rgba(33, 150, 243, 0.5)',
+                        transition: 'transform 0.25s ease-in-out, box-shadow 0.25s',
                         '&:hover': {
-                            background: 'rgba(33, 150, 243, 0.3)',
-                            borderColor: 'rgba(100, 200, 255, 0.6)',
-                            boxShadow: '0 10px 40px rgba(33, 150, 243, 0.5)',
+                            // transform: 'scale(1.07)',
+                            boxShadow: '0 10px 35px rgba(0, 188, 212, 0.7)',
                         },
                     }}
                     onClick={() => navigate(currentUser ? '/dashboard' : '/login')}

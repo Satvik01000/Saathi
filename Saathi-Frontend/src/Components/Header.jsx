@@ -1,7 +1,28 @@
 import { AppBar, Toolbar, Box, Button } from '@mui/material';
 import Logo from '/SaathiLogo.svg';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Context/AuthContext';
 
 const Header = () => {
+    const { currentUser } = useAuth();
+    const navigate = useNavigate();
+
+    const buttonStyles = {
+        borderRadius: '30px',
+        px: 3,
+        py: 0.7,
+        borderColor: 'rgba(255, 255, 255, 0.6)',
+        color: 'white',
+        textTransform: 'none',
+        fontSize: '1rem',
+        transition: 'all 0.5s ease-in-out',
+        '&:hover': {
+            transition: 'all 0.1s ease-in',
+            background: 'rgba(255, 255, 255, 0.15)',
+            borderColor: 'white',
+        },
+    };
+
     return (
         <Box sx={{ p: { xs: 1, sm: 2 } }}>
             <AppBar
@@ -15,7 +36,6 @@ const Header = () => {
                 }}
             >
                 <Toolbar sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                    {/* Logo */}
                     <Box
                         component="img"
                         src={Logo}
@@ -24,41 +44,29 @@ const Header = () => {
                             height: 80,
                             width: 110,
                             objectFit: 'contain',
+                            cursor: 'pointer'
                         }}
+                        onClick={() => navigate('/')}
                     />
 
-                    {/* Nav Links */}
                     <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: { sm: 2, md: 4 } }}>
-                        <Button color="inherit" sx={{ textTransform: 'none', fontSize: '1rem' }}>
+                        <Button variant="outlined" color="inherit" sx={buttonStyles}>
                             Features
                         </Button>
-                        <Button color="inherit" sx={{ textTransform: 'none', fontSize: '1rem' }}>
+                        <Button variant="outlined" color="inherit" sx={buttonStyles}>
                             About Us
                         </Button>
-                        <Button color="inherit" sx={{ textTransform: 'none', fontSize: '1rem' }}>
+                        <Button variant="outlined" color="inherit" sx={buttonStyles}>
                             Contact
                         </Button>
                     </Box>
 
-                    {/* Login Button */}
-                    <Button
-                        variant="outlined"
-                        sx={{
-                            borderRadius: '30px',
-                            px: 3,
-                            py: 0.7,
-                            borderColor: 'rgba(255, 255, 255, 0.6)',
-                            color: 'white',
-                            textTransform: 'none',
-                            fontSize: '1rem',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                borderColor: 'white',
-                            },
-                        }}
+                    <Button 
+                        variant="outlined" 
+                        sx={buttonStyles}
+                        onClick={() => navigate(currentUser ? '/dashboard' : '/login')}
                     >
-                        Login / Sign Up
+                        {currentUser ? 'Go to Dashboard' : 'Login / Sign Up'}
                     </Button>
                 </Toolbar>
             </AppBar>
