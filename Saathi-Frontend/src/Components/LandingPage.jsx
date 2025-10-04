@@ -1,5 +1,3 @@
-// src/Components/LandingPage.jsx
-
 import Spline from '@splinetool/react-spline';
 import { Box, Button, Typography } from '@mui/material';
 import Header from './Header';
@@ -93,7 +91,6 @@ const LandingPage = () => {
                 <Button
                     size="large"
                     sx={{
-                        // --- NEW GLASSMORHPISM LIQUID GLASS STYLES (Bluish tint) ---
                         borderRadius: '30px',
                         px: 5,
                         py: 1.5,
