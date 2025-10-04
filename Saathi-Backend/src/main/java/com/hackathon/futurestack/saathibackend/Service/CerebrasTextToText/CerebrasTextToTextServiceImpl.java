@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,11 +23,11 @@ public class CerebrasTextToTextServiceImpl implements CerebrasTextToTextService{
     }
 
     @Override
-    public TextResponseDTO textToTextResponse(String query) {
+    public TextResponseDTO textToTextResponse(List<Map<String, String>> messages) {
         Map<String, Object> requestBody = Map.of(
                 "model", "llama-4-scout-17b-16e-instruct",
                 "stream", false,
-                "messages", new Object[]{Map.of("content", query, "role", "user")},
+                "messages", messages,
                 "temperature", 0,
                 "max_tokens", -1,
                 "seed", 0,

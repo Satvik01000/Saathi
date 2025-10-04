@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface UserRepo extends JpaRepository<User, UUID> {
     Optional<User> findByFirebaseUid(String firebaseUid);
+    Optional<User> findByEmail(String email);
 }
