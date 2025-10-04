@@ -1,11 +1,9 @@
-// src/App.jsx
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './Components/LandingPage';
 import LoginPage from './Components/LoginPage';
-import Dashboard from './Components/Dashboard';
+import Dashboard from './Components/Dashboard/Dashboard';
 
-function App() {
+const App = () => {
   return (
     <Router>
       <Routes>
