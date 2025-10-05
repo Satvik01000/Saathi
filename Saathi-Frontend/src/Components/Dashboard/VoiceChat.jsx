@@ -14,6 +14,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  LinearProgress,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import MicIcon from "@mui/icons-material/Mic";
@@ -21,13 +22,13 @@ import StopIcon from "@mui/icons-material/Stop";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ReplayIcon from "@mui/icons-material/Replay";
-import LanguageIcon from '@mui/icons-material/Language';
+import LanguageIcon from "@mui/icons-material/Language";
 import axios from "axios";
 import { auth } from "../../firebase-config";
 import BaseURL from "../../../Util/baseBackendURL";
 
 const VoiceChat = () => {
-  const [language, setLanguage] = useState('en'); // ✅ State for language
+  const [language, setLanguage] = useState("en");
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [transcribedText, setTranscribedText] = useState("");
@@ -36,6 +37,13 @@ const VoiceChat = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recognitionRef = useRef(null);
+
+  // ✅ FIX: Use a ref to hold a "live" reference to state for the event listeners.
+  // This prevents the speech recognition from restarting on every command.
+  const stateRef = useRef();
+  useEffect(() => {
+    stateRef.current = { steps, currentStep, language };
+  });
 
   const startRecording = async () => {
     try {
@@ -65,7 +73,7 @@ const VoiceChat = () => {
     const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
     const formData = new FormData();
     formData.append("file", audioBlob, "input.webm");
-    formData.append("language", language); // ✅ Send selected language to backend
+    formData.append("language", language);
 
     try {
       setIsLoading(true);
@@ -88,168 +96,184 @@ const VoiceChat = () => {
     }
   };
 
-const speakStepAt = async (index, arr) => {
-  const source = arr || steps;
-  if (!source.length || index < 0 || index >= source.length) return;
+  const speakStepAt = async (index, arr) => {
+    const source = arr || stateRef.current.steps;
+    if (!source.length || index < 0 || index >= source.length) return;
 
-  window.speechSynthesis?.cancel();
+    window.speechSynthesis?.cancel();
 
-  // ✅ Ensure voices are loaded before we try to use them
-  let voices = window.speechSynthesis.getVoices();
-  if (!voices.length) {
-    await new Promise((resolve) => {
-      window.speechSynthesis.onvoiceschanged = () => {
-        voices = window.speechSynthesis.getVoices();
-        resolve();
-      };
-    });
-  }
+    let voices = window.speechSynthesis.getVoices();
+    if (!voices.length) {
+      await new Promise((resolve) => {
+        window.speechSynthesis.onvoiceschanged = () => {
+          voices = window.speechSynthesis.getVoices();
+          resolve();
+        };
+      });
+    }
 
-  // ✅ Choose a voice based on selected language
-  let selectedVoice = null;
-  if (language === "hi") {
-    selectedVoice =
-      voices.find((v) => v.lang.toLowerCase().includes("hi")) ||
-      voices.find((v) => v.lang.toLowerCase().includes("india")) ||
-      null;
-  } else {
-    selectedVoice =
-      voices.find((v) => v.lang.toLowerCase().includes("en-in")) ||
-      voices.find((v) => v.lang.toLowerCase().includes("en")) ||
-      null;
-  }
+    let selectedVoice = null;
+    const currentLang = stateRef.current.language;
+    if (currentLang === "hi") {
+      selectedVoice =
+        voices.find((v) => v.lang === 'hi-IN') ||
+        voices.find((v) => v.lang.toLowerCase().includes("hi")) ||
+        null;
+    } else {
+      selectedVoice =
+        voices.find((v) => v.lang === 'en-IN') ||
+        voices.find((v) => v.lang === 'en-GB') ||
+        voices.find((v) => v.lang.toLowerCase().includes("en")) ||
+        null;
+    }
 
-  const utter = new SpeechSynthesisUtterance(source[index]);
-  utter.lang = language === "hi" ? "hi-IN" : "en-IN";
-  if (selectedVoice) utter.voice = selectedVoice;
-  utter.rate = 1;
-  utter.pitch = 1;
+    const utter = new SpeechSynthesisUtterance(source[index]);
+    utter.lang = currentLang === "hi" ? "hi-IN" : "en-IN";
+    if (selectedVoice) utter.voice = selectedVoice;
+    utter.rate = 1;
+    utter.pitch = 1;
 
-  window.speechSynthesis.speak(utter);
-  setCurrentStep(index);
+    window.speechSynthesis.speak(utter);
+    setCurrentStep(index);
 
-  // Auto-scroll to current step
-  setTimeout(() => {
-    document.getElementById(`step-${index}`)?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }, 60);
-};
+    setTimeout(() => {
+      document.getElementById(`step-${index}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 60);
+  };
 
+  const handleNext = () => {
+    const { steps, currentStep } = stateRef.current;
+    if (currentStep < steps.length - 1) speakStepAt(currentStep + 1, steps);
+  };
+  const handlePrev = () => {
+    const { currentStep } = stateRef.current;
+    if (currentStep > 0) speakStepAt(currentStep - 1);
+  };
+  const handleRepeat = () => {
+    const { currentStep } = stateRef.current;
+    if (currentStep !== -1) speakStepAt(currentStep);
+  };
 
-  const handleNext = () => { if (currentStep < steps.length - 1) speakStepAt(currentStep + 1); };
-  const handlePrev = () => { if (currentStep > 0) speakStepAt(currentStep - 1); };
-  const handleRepeat = () => speakStepAt(currentStep);
-
+  // ✅ FIX: This useEffect now only restarts when the language changes, making it stable.
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-        console.warn("Speech Recognition not supported in this browser.");
-        return;
+      console.warn("Speech Recognition not supported in this browser.");
+      return;
     }
+    
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
+
     const rec = new SR();
-    rec.lang = language === 'en' ? 'en-IN' : 'hi-IN'; // ✅ Use selected language for voice commands
+    rec.lang = language === 'en' ? 'en-IN' : 'hi-IN';
     rec.continuous = true;
     rec.interimResults = false;
-rec.onresult = (e) => {
-  const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase().trim();
-  console.log("Heard:", transcript);
 
-  // ✅ English Commands
-  if (transcript.includes("next")) handleNext();
-  else if (transcript.includes("previous") || transcript.includes("back")) handlePrev();
-  else if (transcript.includes("repeat") || transcript.includes("again")) handleRepeat();
+    rec.onresult = (e) => {
+      const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase().trim();
+      console.log("Heard:", transcript);
 
-  // ✅ Hindi Commands (add more synonyms if needed)
-  else if (transcript.includes("अगला") || transcript.includes("आगे")) handleNext();
-  else if (transcript.includes("पिछला") || transcript.includes("पीछे")) handlePrev();
-  else if (transcript.includes("दोहराओ") || transcript.includes("फिर से")) handleRepeat();
-};
+      if (transcript.includes("next") || transcript.includes("अगला") || transcript.includes("आगे")) handleNext();
+      else if (transcript.includes("previous") || transcript.includes("back") || transcript.includes("पिछला") || transcript.includes("पीछे")) handlePrev();
+      else if (transcript.includes("repeat") || transcript.includes("again") || transcript.includes("दोहराओ") || transcript.includes("फिर से")) handleRepeat();
+    };
 
+    rec.onend = () => {
+        if (recognitionRef.current) {
+            rec.start();
+        }
+    };
     rec.onerror = (e) => console.warn("Voice command error:", e.error);
+    
     recognitionRef.current = rec;
     rec.start();
-    return () => rec.stop();
-  }, [currentStep, steps.length, language]); // ✅ Re-start recognition if language changes
+
+    return () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.onend = null;
+            recognitionRef.current.stop();
+            recognitionRef.current = null;
+        }
+    };
+  }, [language]); // Dependency array only has language.
 
   return (
-    <Box sx={{ height: "100%", width: "100%", background: "linear-gradient(135deg, #0f0f0f, #1a1a1a)", display: "flex", alignItems: "center", justifyContent: "center", p: 3 }}>
-      <Paper elevation={6} sx={{ width: "100%", maxWidth: 760, maxHeight: "85vh", overflow: "hidden", borderRadius: "24px", p: 4, bgcolor: "rgba(255,255,255,0.05)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.1)", color: "white", display: "flex", flexDirection: "column" }}>
-        <Typography variant="h4" align="center" sx={{ mb: 3, fontWeight: 700 }}>🎙️ Voice Assistant</Typography>
-
-        <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 2 }}>
-          
-          {/* ✅ Language Dropdown */}
-          <FormControl variant="outlined" size="small">
-            <Select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              disabled={isRecording || isLoading}
-              sx={{ color: 'white', borderRadius: '50px', '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' }, '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' }, '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' }, '.MuiSvgIcon-root': { color: 'white' } }}
-              startAdornment={<LanguageIcon sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />}
-            >
-              <MenuItem value="en">English</MenuItem>
-              <MenuItem value="hi">हिन्दी (Hindi)</MenuItem>
-            </Select>
-          </FormControl>
-          
-          <Button
-            onClick={isRecording ? stopRecording : startRecording}
-            variant="contained"
-            color={isRecording ? "error" : "success"}
-            startIcon={isRecording ? <StopIcon /> : <MicIcon />}
-            sx={{ px: 4, py: 1.2, fontSize: "1.05rem", borderRadius: "50px", transition: "0.3s", boxShadow: isRecording ? "0 0 20px rgba(255,0,0,0.55)" : "0 0 20px rgba(0,255,0,0.45)", animation: isRecording ? "pulse 1.5s infinite ease-in-out" : "none", "@keyframes pulse": { "0%": { boxShadow: "0 0 0 0 rgba(255,0,0,0.6)" }, "70%": { boxShadow: "0 0 0 16px rgba(255,0,0,0)" }, "100%": { boxShadow: "0 0 0 0 rgba(255,0,0,0)" } } }}
-          >
-            {isRecording ? "Stop" : "Start Talking"}
-          </Button>
+    <Box sx={{ height: "100%", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Paper elevation={8} sx={{ width: "100%", maxWidth: 850, height: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column", borderRadius: "24px", bgcolor: "rgba(20,20,20,0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.12)", overflow: "hidden", p: 4, boxShadow: "0 10px 40px rgba(0,0,0,0.6)", color: "white" }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: "white" }}>🎤 Voice Assistant</Typography>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <FormControl size="small">
+              <Select value={language} onChange={(e) => setLanguage(e.target.value)} disabled={isRecording || isLoading} sx={{ color: "white", bgcolor: "rgba(255,255,255,0.08)", borderRadius: "12px", ".MuiOutlinedInput-notchedOutline": { borderColor: 'rgba(255, 255, 255, 0.23)' }, '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' }, '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' }, '.MuiSvgIcon-root': { color: 'white' } }}>
+                <MenuItem value="en">English</MenuItem>
+                <MenuItem value="hi">हिन्दी (Hindi)</MenuItem>
+              </Select>
+            </FormControl>
+            <Button onClick={isRecording ? stopRecording : startRecording} variant="contained" color={isRecording ? "error" : "success"} startIcon={isRecording ? <StopIcon /> : <MicIcon />} sx={{ borderRadius: "40px", px: 3, fontWeight: 600 }}>
+              {isRecording ? "Stop" : "Start Talking"}
+            </Button>
+          </Stack>
         </Stack>
 
-        {steps.length > 0 && (
-          <Stack direction="row" spacing={1} justifyContent="center">
-            <Tooltip title="Previous step"><span><Button onClick={handlePrev} disabled={currentStep <= 0} variant="outlined" startIcon={<ArrowBackIcon />}>Back</Button></span></Tooltip>
-            <Tooltip title="Repeat current step"><span><Button onClick={handleRepeat} disabled={currentStep < 0} variant="outlined" startIcon={<ReplayIcon />}>Repeat</Button></span></Tooltip>
-            <Tooltip title="Next step"><span><Button onClick={handleNext} disabled={currentStep >= steps.length - 1 || steps.length === 0} variant="contained" endIcon={<ArrowForwardIcon />}>Next</Button></span></Tooltip>
-          </Stack>
-        )}
-        
-        {steps.length > 0 && (
-          <Typography align="center" sx={{ mt: 2, mb: 2, color: "#4caf50", fontSize: "1.05rem", fontWeight: 600, textShadow: "0px 0px 10px rgba(76,175,80,0.7)" }}>
-            💡 Voice Commands: Say <strong>"next"</strong>, <strong>"repeat"</strong>, or <strong>"previous"</strong> anytime.
-          </Typography>
+        {(steps.length > 0 || isLoading) && (
+            <Typography align="center" sx={{ mb: 3, color: "#4caf50", fontWeight: 600, textShadow: "0px 0px 10px rgba(76,175,80,0.6)" }}>
+            💡 Say “next”, “repeat”, or “previous” anytime.
+            </Typography>
         )}
 
         {isLoading && (
-          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 2 }}>
-            <CircularProgress size={28} color="inherit" />
-            <Typography>Processing your voice…</Typography>
-          </Stack>
+            <Stack sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }} spacing={2}>
+                <CircularProgress size={40} color="inherit" />
+                <Typography>Processing your voice…</Typography>
+            </Stack>
         )}
 
-        <Box sx={{ flex: 1, overflow: "auto", pr: 1, mt: 2 }}>
-          {transcribedText && (
-            <Box sx={{ p: 2.5, mb: 2.5, borderRadius: 3, maxHeight: "18vh", overflowY: "auto", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <Typography variant="subtitle1" sx={{ color: "#bbb", mb: 1, fontWeight: 500 }}>🔑 You said:</Typography>
-              <Typography variant="body1" sx={{ fontSize: "1.05rem", lineHeight: 1.6 }}>{transcribedText}</Typography>
-            </Box>
-          )}
+        {!isLoading && !steps.length && (
+          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.4)", fontSize: "1.2rem", fontWeight: 500, textAlign: "center", px: 4 }}>
+            🎤 Start talking to receive your step-by-step guide here.
+          </Box>
+        )}
 
-          {steps.length > 0 && (
-            <Box sx={{ p: 2.5, borderRadius: 3, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 600, borderBottom: "1px solid rgba(255,255,255,0.2)", pb: 1 }}>🧭 Step-by-Step Guide</Typography>
-              <Box sx={{ maxHeight: "50vh", overflowY: "auto", pr: 1 }}>
+        {!isLoading && steps.length > 0 && (
+          <Box sx={{ flex: 1, overflow: "hidden", display: 'flex', flexDirection: 'column' }}>
+            {transcribedText && (
+              <Paper sx={{ p: 2, mb: 2, bgcolor: "rgba(255,255,255,0.05)", color: "#ccc" }}>
+                <Typography variant="subtitle1">🔑 You said:</Typography>
+                <Typography variant="body1">{transcribedText}</Typography>
+              </Paper>
+            )}
+
+            <Typography sx={{ mb: 1 }}>
+              Step {currentStep + 1} of {steps.length}
+            </Typography>
+            <LinearProgress variant="determinate" value={((currentStep + 1) / steps.length) * 100} sx={{ mb: 2, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.1)", "& .MuiLinearProgress-bar": { backgroundColor: "#4caf50" } }}/>
+
+            <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
+              <Paper sx={{ p: 2.5, bgcolor: "rgba(0,0,0,0.2)", borderRadius: 3, border: "1px solid rgba(255,255,255,0.12)" }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, color: "white" }}>🧭 Step-by-Step Guide</Typography>
                 <List>
                   {steps.map((step, i) => (
-                    <ListItem id={`step-${i}`} key={i} sx={{ mb: 0.75, borderRadius: 2, transition: "0.25s", borderLeft: i === currentStep ? "3px solid #4caf50" : "3px solid transparent", background: i === currentStep ? "rgba(76,175,80,0.14)" : "transparent", "&:hover": { background: "rgba(255,255,255,0.10)" } }}>
+                    <ListItem id={`step-${i}`} key={i} sx={{ mb: 0.75, borderRadius: 2, background: i === currentStep ? "rgba(76,175,80,0.2)" : "transparent", borderLeft: i === currentStep ? "3px solid #4caf50" : "3px solid transparent" }}>
                       <ListItemIcon><CheckCircleIcon sx={{ color: "#4caf50" }} /></ListItemIcon>
-                      <ListItemText primaryTypographyProps={{ fontSize: "1.05rem", color: "white" }} primary={`${i + 1}. ${step}`} />
+                      <ListItemText primaryTypographyProps={{ color: "white" }} primary={`${i + 1}. ${step}`} />
                     </ListItem>
                   ))}
                 </List>
-              </Box>
+              </Paper>
             </Box>
-          )}
-        </Box>
+
+            <Stack direction="row" justifyContent="center" spacing={2} sx={{ mt: 3 }}>
+              <Button onClick={handlePrev} disabled={currentStep <= 0} variant="outlined" startIcon={<ArrowBackIcon />}>Back</Button>
+              <Button onClick={handleRepeat} disabled={currentStep < 0} variant="outlined" startIcon={<ReplayIcon />}>Repeat</Button>
+              <Button onClick={handleNext} disabled={currentStep >= steps.length - 1} variant="contained" endIcon={<ArrowForwardIcon />}>Next</Button>
+            </Stack>
+          </Box>
+        )}
       </Paper>
     </Box>
   );
