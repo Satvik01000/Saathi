@@ -11,8 +11,4 @@ public class SaathiBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(SaathiBackendApplication.class, args);
     }
-    @Bean
-    public WebClient webClient(WebClient.Builder builder) {
-        return builder.build();
-    }
 }

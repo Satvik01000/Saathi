@@ -12,4 +12,5 @@ public interface ChatService {
     NewChatResponseDTO createNewChat(String query);
     ChatMessageResponseDTO addMessageToChat(UUID chatId, String query);
     Optional<List<Chat>> returnAllChat();
+    Optional<Chat> findSingleChat(UUID chatId);
 }

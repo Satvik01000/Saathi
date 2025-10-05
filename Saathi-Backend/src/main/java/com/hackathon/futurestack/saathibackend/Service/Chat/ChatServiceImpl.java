@@ -7,7 +7,7 @@ import com.hackathon.futurestack.saathibackend.DTO.Response.TextResponseDTO;
 import com.hackathon.futurestack.saathibackend.Entities.*;
 import com.hackathon.futurestack.saathibackend.Repository.ChatRepo;
 import com.hackathon.futurestack.saathibackend.Repository.UserRepo;
-import com.hackathon.futurestack.saathibackend.Service.CerebrasTextToText.CerebrasTextToTextService;
+import com.hackathon.futurestack.saathibackend.Service.AITextToText.AITextToTextService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +23,10 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatRepo chatRepo;
     private final UserRepo userRepo;
-    private final CerebrasTextToTextService cerebrasService;
+    private final AITextToTextService cerebrasService;
     private final AuthenticationFacade authFacade;
 
-    public ChatServiceImpl(ChatRepo chatRepo, UserRepo userRepo, CerebrasTextToTextService cerebrasService, AuthenticationFacade authFacade) {
+    public ChatServiceImpl(ChatRepo chatRepo, UserRepo userRepo, AITextToTextService cerebrasService, AuthenticationFacade authFacade) {
         this.chatRepo = chatRepo;
         this.userRepo = userRepo;
         this.cerebrasService = cerebrasService;
@@ -87,6 +87,11 @@ public class ChatServiceImpl implements ChatService {
     public Optional<List<Chat>> returnAllChat() {
         User currentUser = findAuthenticatedUser();
         return chatRepo.findByUser(currentUser);
+    }
+
+    @Override
+    public Optional<Chat> findSingleChat(UUID chatId) {
+        return chatRepo.findById(chatId);
     }
 
     private User findAuthenticatedUser() {
