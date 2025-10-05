@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +24,6 @@ public class AIVoiceToVoiceServiceImpl implements AIVoiceToVoiceService {
     @Value("${GROQ_STT_URL}")
     private String sttUrl;
 
-    @Value("${GROQ_TTS_URL}")
-    private String ttsUrl;
-
     private final WebClient webClient;
     private final AITextToTextService aiTextToTextService;
 
@@ -37,13 +33,14 @@ public class AIVoiceToVoiceServiceImpl implements AIVoiceToVoiceService {
     }
 
     @Override
-    public VoiceStepResponseDTO stepByStepQueryResponse(MultipartFile audioFile) {
+    public VoiceStepResponseDTO stepByStepQueryResponse(MultipartFile audioFile, String language) {
         Map<String, Object> sttResponse = webClient.post()
                 .uri(sttUrl)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData("file", audioFile.getResource())
                         .with("model", "whisper-large-v3")
+                        .with("language", language) // ✅ Use the selected language
                         .with("temperature", "0")
                         .with("response_format", "json"))
                 .retrieve()
@@ -54,17 +51,14 @@ public class AIVoiceToVoiceServiceImpl implements AIVoiceToVoiceService {
                 ? sttResponse.get("text").toString()
                 : "";
 
-        // ✅ FINAL PROMPT: Updated with instructions for simple language and specific app recommendations.
-        String systemPrompt = "Your name is 'Saathi'. Your purpose is to help people, especially older adults, by providing simple, step-by-step guidance for digital tasks. " +
-                "CRITICAL RULE: Avoid technical jargon. When a task requires an application, you MUST recommend and name the most common and widely-used application in India. " +
-                "EXAMPLES: For email, recommend 'Gmail'. For payments, recommend 'Paytm' or 'Google Pay'. For messaging, recommend 'WhatsApp'. For booking trains, recommend 'IRCTC'." +
-                " If the user's question is NOT about a specific digital task, you MUST politely refuse. Your response must be ONLY this exact sentence: 'I'm sorry, I'm designed specifically to help with tasks on your phone or computer, like paying electricity bills using PayTm or sending a UPI payment to a friend. General questions are outside of my scope.'" +
-                " If the request IS a digital task, convert it into a concise, numbered list of executable steps. " +
+        String systemPrompt = "Your name is 'Saathi'. Your purpose is to help people, especially older adults, navigate the digital world by providing simple, step-by-step guidance for tasks on phones or computers, such as paying an electricity bill using PayTm, sending a UPI payment to a friend, or sending an email." +
+                " If a user's question is NOT about a specific digital task (e.g., general knowledge, trivia, small talk), you MUST politely refuse. Your response must be ONLY this exact sentence: 'I'm sorry, I'm designed specifically to help with tasks on your phone or computer, like paying electricity bills using PayTm or sending a UPI payment to a friend. General questions are outside of my scope.'" +
+                " If the request IS about a digital task, you must convert it into a concise, numbered list of executable steps. " +
                 "Formatting Rules: " +
-                "1) Output plain text only; no other text. " +
+                "1) Output plain text only; do not add any extra introductions, summaries, or conversational text. " +
                 "2) Start numbering at 1 and use the format '1. ...'. " +
                 "3) Each step must be on a new line. " +
-                "4) Respond in the same language as the user's request.";
+                "4) Always respond in the same language as the user's request; do not translate. ";
 
         var messages = List.of(
                 Map.of("role", "system", "content", systemPrompt),
@@ -78,39 +72,10 @@ public class AIVoiceToVoiceServiceImpl implements AIVoiceToVoiceService {
                 .filter(s -> !s.isEmpty())
                 .toList();
 
-        boolean isNonEnglish = containsNonEnglish(transcribedText);
-
-        if (isNonEnglish) {
-            return VoiceStepResponseDTO.builder()
-                    .transcribedText(transcribedText)
-                    .stepTexts(stepList)
-                    .audioFiles(List.of())
-                    .build();
-        }
-
-        List<byte[]> audioFiles = new ArrayList<>();
-        for (String step : stepList) {
-            byte[] audioBytes = webClient.post()
-                    .uri(ttsUrl)
-                    .header("Authorization", "Bearer " + apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(Map.of( "model", "tts-1", "voice", "alloy", "input", step, "response_format", "wav" ))
-                    .retrieve()
-                    .bodyToMono(byte[].class)
-                    .block();
-
-            if (audioBytes != null) audioFiles.add(audioBytes);
-        }
-
         return VoiceStepResponseDTO.builder()
                 .transcribedText(transcribedText)
                 .stepTexts(stepList)
-                .audioFiles(audioFiles)
+                .audioFiles(List.of())
                 .build();
-    }
-
-    private boolean containsNonEnglish(String text) {
-        if (text == null || text.isBlank()) return false;
-        return text.codePoints().anyMatch(cp -> (cp >= 0x0900 && cp <= 0x0D7F) || (cp >= 0x4E00 && cp <= 0x9FFF));
     }
 }
