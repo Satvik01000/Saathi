@@ -1,4 +1,4 @@
-package com.hackathon.futurestack.saathibackend.Service.CerebrasTextToText;
+package com.hackathon.futurestack.saathibackend.Service.AITextToText;
 
 import com.hackathon.futurestack.saathibackend.DTO.ExternalResponse.CerebrasApiResponse;
 import com.hackathon.futurestack.saathibackend.DTO.Response.TextResponseDTO;
@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class CerebrasTextToTextServiceImpl implements CerebrasTextToTextService{
+public class AITextToTextServiceImpl implements AITextToTextService {
     @Value("${API_KEY}")
     private String apiKey;
     @Value("${API_URL}")
     private String apiUrl;
 
     private final WebClient webClient;
-    public CerebrasTextToTextServiceImpl(WebClient webClient) {
+    public AITextToTextServiceImpl(WebClient webClient) {
         this.webClient = webClient;
     }
 
