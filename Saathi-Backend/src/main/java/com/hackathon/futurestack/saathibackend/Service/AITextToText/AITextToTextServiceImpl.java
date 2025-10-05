@@ -12,9 +12,9 @@ import java.util.Map;
 
 @Service
 public class AITextToTextServiceImpl implements AITextToTextService {
-    @Value("${API_KEY}")
+    @Value("${CEREBRAS_API_KEY}")
     private String apiKey;
-    @Value("${API_URL}")
+    @Value("${CEREBRAS_API_URL}")
     private String apiUrl;
 
     private final WebClient webClient;
