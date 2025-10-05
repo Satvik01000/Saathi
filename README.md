@@ -19,9 +19,11 @@ Many older adults find it challenging to keep up with modern technology. Essenti
 
 ## 📸 Screenshots
 
-| Landing Page | Text Chat | Voice Assistant |
-| :---: | :---: | :---: |
-|  |  |  |
+
+<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/62e70392-bafe-4edf-9940-baefe504ddc3" />
+<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/904dca78-e8cf-4740-8e3f-4bfdfd59b0f4" />
+<img width="1440" height="900" alt="image" src="https://github.com/user-attachments/assets/1ea44e6b-577d-414b-a36c-0f9e96028db9" />
+
 
 ## 🛠️ Tech Stack
 
