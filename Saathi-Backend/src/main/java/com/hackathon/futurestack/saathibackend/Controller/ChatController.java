@@ -53,9 +53,10 @@ public class ChatController {
 
     @PostMapping(value = "/voice", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VoiceStepResponseDTO> processVoiceQuery(
-            @RequestPart("file") MultipartFile audioFile) {
+            @RequestPart("file") MultipartFile audioFile,
+            @RequestPart("language") String language) {
 
-        VoiceStepResponseDTO response = aiVoiceToVoiceService.stepByStepQueryResponse(audioFile);
+        VoiceStepResponseDTO response = aiVoiceToVoiceService.stepByStepQueryResponse(audioFile, language);
         return ResponseEntity.ok(response);
     }
 }
