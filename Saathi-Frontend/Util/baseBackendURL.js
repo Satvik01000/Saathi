@@ -1,2 +1,2 @@
-const BaseURL = 'http://localhost:8080/api';
+const BaseURL = 'https://7af212b02524.ngrok-free.app/api';
 export default BaseURL;
