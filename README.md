@@ -2,7 +2,7 @@
 
 **Saathi is an AI-powered assistant designed to help older adults navigate the digital world with confidence, providing simple, step-by-step guidance for everyday online tasks in both English and Hindi.**
 
-### [Link to 2-Minute Demo Video] ---
+[### [Demo Video](https://youtu.be/P9ylNQSBhlI?si=oygkZYLgn4VVu7JI)
 
 ## 🎯 The Problem
 
