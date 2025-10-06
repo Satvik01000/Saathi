@@ -1,12 +1,26 @@
-# Stage 1: Build the application
-FROM maven:3.8-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn package -DskipTests
+# ---- Build stage ----
+FROM maven:3.9.9-eclipse-temurin-23 AS build
+WORKDIR /workspace
 
-# Stage 2: Run the application
-FROM eclipse-temurin:17-jre-focal
+# Cache deps early
+COPY pom.xml .
+RUN mvn -q -DskipTests dependency:go-offline
+
+# Build
+COPY src ./src
+RUN mvn -q -DskipTests package
+
+# ---- Runtime stage ----
+FROM eclipse-temurin:23-jdk
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Copy the fat jar produced by Spring Boot
+COPY --from=build /workspace/target/*.jar app.jar
+
+# Expose app port
+EXPOSE 8080
+
+# Optional: pass extra JVM flags via JAVA_OPTS
+ENV JAVA_OPTS=""
+
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]

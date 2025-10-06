@@ -34,3 +34,4 @@ build/
 
 # Ignore Firebase admin secret key
 src/main/resources/serviceAccountKey.json
+.env
