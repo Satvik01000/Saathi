@@ -1,1 +1,8 @@
-Saathi-Frontend/** linguist-vendored
+Saathi-Frontend/package-lock.json linguist-vendored
+Saathi-Frontend/eslint.config.js linguist-vendored
+Saathi-Frontend/package.json linguist-vendored
+Saathi-Frontend/vite.config.js linguist-vendored
+Saathi-Frontend/src/firebase-config.js linguist-vendored
+Saathi-Frontend/src/firebase-config.js linguist-vendored
+Saathi-Frontend/src/Context/** linguist-vendored
+Saathi-Frontend/src/Components/Dashboard/** linguist-vendored
