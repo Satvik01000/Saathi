@@ -5,4 +5,4 @@ Saathi-Frontend/vite.config.js linguist-vendored
 Saathi-Frontend/src/firebase-config.js linguist-vendored
 Saathi-Frontend/src/firebase-config.js linguist-vendored
 Saathi-Frontend/src/Context/** linguist-vendored
-Saathi-Frontend/src/Components/Dashboard/** linguist-vendored
+Saathi-Frontend/src/Components/Dashboard/VoiceChat.jsx linguist-vendored
