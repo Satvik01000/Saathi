@@ -12,7 +12,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "chat")
-@Data // A convenient Lombok annotation that includes @Getter, @Setter, etc.
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Chat extends BaseModel {
