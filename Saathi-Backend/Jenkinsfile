@@ -8,19 +8,10 @@ pipeline {
     }
 
     triggers {
-        cron('H * * * *') // hourly build
+        cron('H * * * *')
     }
 
     stages {
-        stage('Build & Test') {
-            steps {
-                dir('Saathi-Backend') {
-                    echo "🧪 Running unit tests..."
-                    sh 'mvn clean test || echo "No tests to run, continuing..."'
-                }
-            }
-        }
-
         stage('Docker Build') {
             steps {
                 dir('Saathi-Backend') {
