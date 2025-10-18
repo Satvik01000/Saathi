@@ -1,0 +1,25 @@
+pipeline{
+    agent any
+    tools{
+        maven 'jenkins-maven'
+    }
+    stages{
+        stage('Build'){
+            steps{
+                sh '''
+                    mvn -DskipTests clean package
+                '''
+            }
+        }
+        stage('Test'){
+            steps{
+                echo 'Testing...'
+            }
+        }
+        stage('Deploy'){
+            steps{
+                echo 'Deploying...'
+            }
+        }
+    }
+}
