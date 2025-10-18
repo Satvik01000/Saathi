@@ -1,23 +1,26 @@
-pipeline{
+pipeline {
     agent any
-    tools{
+    tools {
         maven 'jenkins-maven'
     }
-    stages{
-        stage('Build'){
-            steps{
-                sh '''
-                    mvn -DskipTests clean package
-                '''
+
+    stages {
+        stage('Build') {
+            steps {
+                dir('Saathi-Backend') {
+                    sh 'mvn -DskipTests clean package'
+                }
             }
         }
-        stage('Test'){
-            steps{
+
+        stage('Test') {
+            steps {
                 echo 'Testing...'
             }
         }
-        stage('Deploy'){
-            steps{
+
+        stage('Deploy') {
+            steps {
                 echo 'Deploying...'
             }
         }
