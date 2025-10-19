@@ -10,10 +10,12 @@ RUN mvn -q -DskipTests dependency:go-offline
 COPY src ./src
 RUN mvn -q -DskipTests package
 
+ARG DOCKER_GID
+
 # ---- Runtime stage ----
 FROM eclipse-temurin:23-jdk
 WORKDIR /app
-
+RUN groupadd -g ${DOCKER_GID} docker && usermod -aG docker jenkins
 # Copy the fat jar produced by Spring Boot
 COPY --from=build /workspace/target/*.jar app.jar
 
