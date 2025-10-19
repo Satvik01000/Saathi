@@ -12,16 +12,11 @@ pipeline {
     }
 
     stages {
-        stage('Docker Build') {
-            steps {
-                dir('Saathi-Backend') {
-                    echo "🔨 Building Docker image: ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
-                    sh "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} ."
-                }
+        stage('Buld Maven '){
+            steps{
+                sh 'mvn clean -DskipTests package'
             }
         }
-
-
     }
 
     post {
