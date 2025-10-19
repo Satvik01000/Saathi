@@ -6,7 +6,9 @@ pipeline {
         DOCKER_HUB_REPO = "satvik0100/saathi-backend"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
-
+    tools{
+        maven 'jenkins-maven'
+    }
     triggers {
         cron('H * * * *')
     }
