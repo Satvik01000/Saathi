@@ -21,19 +21,7 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
-            when { expression { false } } // disabled until ready
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh '''
-                        echo "$PASS" | docker login -u "$USER" --password-stdin
-                        docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
-                        docker tag ${DOCKER_HUB_REPO}:${IMAGE_TAG} ${DOCKER_HUB_REPO}:latest
-                        docker push ${DOCKER_HUB_REPO}:latest
-                    '''
-                }
-            }
-        }
+
     }
 
     post {
