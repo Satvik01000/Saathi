@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    // Use a Docker agent with Maven 3.9 and JDK 21
+    agent {
+        docker {
+            image 'maven:3.9.6-eclipse-temurin-21'
+        }
+    }
 
     environment {
         IMAGE_NAME = "saathi-backend"
@@ -7,11 +12,7 @@ pipeline {
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
-    tools {
-        jdk 'OpenJDK21'
-        maven 'jenkins-maven'
-    }
-
+    // No longer need the 'tools' section for Maven, as it's in the Docker image
     triggers {
         cron('H * * * *')
     }
@@ -19,6 +20,7 @@ pipeline {
     stages {
         stage('Build Maven') {
             steps {
+                // The directory is now relative to the workspace inside the container
                 dir('Saathi-Backend') {
                     sh 'mvn clean package -DskipTests'
                 }
