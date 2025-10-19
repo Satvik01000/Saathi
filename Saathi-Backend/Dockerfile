@@ -10,19 +10,20 @@ RUN mvn -q -DskipTests dependency:go-offline
 COPY src ./src
 RUN mvn -q -DskipTests package
 
-ARG DOCKER_GID
-
 # ---- Runtime stage ----
 FROM eclipse-temurin:23-jdk
 WORKDIR /app
-RUN groupadd -g ${DOCKER_GID} docker && usermod -aG docker jenkins
-# Copy the fat jar produced by Spring Boot
+
+# Install Docker CLI (optional, if needed)
+RUN apt-get update && apt-get install -y docker.io && rm -rf /var/lib/apt/lists/*
+
+# Copy jar
 COPY --from=build /workspace/target/*.jar app.jar
 
 # Expose app port
 EXPOSE 8080
 
-# Optional: pass extra JVM flags via JAVA_OPTS
-ENV JAVA_OPTS=""
+# Run as root so Docker access is allowed
+USER root
 
 ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]
