@@ -4,26 +4,28 @@ pipeline {
     environment {
         IMAGE_NAME = "saathi-backend"
         DOCKER_HUB_REPO = "satvik0100/saathi-backend"
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
-    tools{
+
+    tools {
         maven 'jenkins-maven'
     }
+
     triggers {
-        cron('H * * * *')
+        cron('H * * * *')  // runs once every hour at a random minute
     }
 
     stages {
-        stage('Buld Maven '){
-            steps{
-                sh 'mvn clean -DskipTests package'
+        stage('Build Maven') {
+            steps {
+                sh 'mvn clean package -DskipTests'
             }
         }
     }
 
     post {
         always {
-            echo "✅ CI pipeline complete for Saathi build #${env.BUILD_NUMBER}"
+            echo "✅ CI pipeline complete for Saathi build #${BUILD_NUMBER}"
         }
     }
 }
