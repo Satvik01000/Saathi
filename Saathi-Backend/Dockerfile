@@ -14,16 +14,13 @@ RUN mvn -q -DskipTests package
 FROM eclipse-temurin:23-jdk
 WORKDIR /app
 
-# Install Docker CLI (optional, if needed)
-RUN apt-get update && apt-get install -y docker.io && rm -rf /var/lib/apt/lists/*
-
-# Copy jar
+# Copy the fat jar produced by Spring Boot
 COPY --from=build /workspace/target/*.jar app.jar
 
 # Expose app port
 EXPOSE 8080
 
-# Run as root so Docker access is allowed
-USER root
+# Optional: pass extra JVM flags via JAVA_OPTS
+ENV JAVA_OPTS=""
 
 ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]
