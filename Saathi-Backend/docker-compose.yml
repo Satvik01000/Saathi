@@ -4,9 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: saathi-backend:latest
     container_name: saathi-backend
     ports:
-      - "8081:8080"
+      - "8081:8081"
     env_file:
       - .env
     restart: unless-stopped
